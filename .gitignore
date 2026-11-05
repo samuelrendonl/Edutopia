@@ -4,5 +4,4 @@ __pycache__/
 *.py[cod]
 Frontend/node_modules/
 Frontend/dist/
-Backend/cache/
 *.pdf
