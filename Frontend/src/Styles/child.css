@@ -129,6 +129,12 @@
   transform: translateY(-1px);
 }
 
+.child-submit-button:disabled {
+  cursor: wait;
+  opacity: .7;
+  transform: none;
+}
+
 /* RESPONSIVE */
 
 @media (max-width: 600px) {

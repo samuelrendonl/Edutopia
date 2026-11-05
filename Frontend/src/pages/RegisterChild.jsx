@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Navbar from "../components/Navbar";
 import "../Styles/child.css";
 import { api, getParent } from "../api";
@@ -8,6 +8,8 @@ function RegisterChild() {
   const navigate = useNavigate();
 
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submittingRef = useRef(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -19,9 +21,22 @@ function RegisterChild() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setIsSubmitting(true);
+    setError("");
     const data = new FormData(event.currentTarget);
-    try { await api("/children", { method: "POST", body: JSON.stringify({ name: data.get("childName"), age: data.get("childAge"), grade: data.get("childGrade") }) }); navigate("/Dashboard"); }
-    catch (err) { setError(err.message); }
+    try {
+      await api("/children", {
+        method: "POST",
+        body: JSON.stringify({ name: data.get("childName"), age: data.get("childAge"), grade: data.get("childGrade") }),
+      });
+      navigate("/Dashboard");
+    } catch (err) {
+      setError(err.message);
+      submittingRef.current = false;
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -64,7 +79,7 @@ function RegisterChild() {
                   id="childAge"
                   name="childAge"
                   placeholder="Ej. 9"
-                  min="5"
+                  min="3"
                   max="12"
                   required
                 />
@@ -101,8 +116,8 @@ function RegisterChild() {
                 Cancelar
               </Link>
 
-              <button type="submit" className="child-submit-button">
-                Crear perfil
+              <button type="submit" className="child-submit-button" disabled={isSubmitting}>
+                {isSubmitting ? "Creando perfil..." : "Crear perfil"}
               </button>
             </div>
           </form>

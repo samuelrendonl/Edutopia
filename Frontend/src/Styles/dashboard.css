@@ -24,6 +24,8 @@
 .children-list { display: grid; gap: 16px; }
 .child-card .primary-action { white-space: nowrap; }
 .child-guides-wrapper { grid-column: 1 / -1; }
+.child-card-actions { display: flex; flex-direction: column; gap: 9px; min-width: 150px; }
+.child-card-actions > .primary-action { text-align: center; }
 
 .dashboard-label {
   color: var(--primary);
@@ -309,6 +311,33 @@
 .child-actions button:hover {
   transform: translateY(-1px);
 }
+.child-actions button:disabled { cursor: wait; opacity: .65; transform: none; }
+.danger-action { color: #b42318; background: var(--surface); border: 1px solid #efb4b4; }
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(23, 32, 51, .52);
+}
+.edit-child-modal {
+  width: min(560px, 100%);
+  padding: 30px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 24px 70px rgba(23, 32, 51, .25);
+}
+.modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+.modal-header h2 { margin: 7px 0 0; color: var(--dark); }
+.modal-close { color: var(--text); background: transparent; border: 0; font-size: 28px; line-height: 1; cursor: pointer; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+.modal-actions button { padding: 11px 16px; border-radius: 9px; font-weight: 800; cursor: pointer; }
+.modal-actions button:disabled, .modal-close:disabled { cursor: wait; opacity: .65; }
 
 /* STATS */
 
@@ -359,6 +388,12 @@
 @media (max-width: 950px) {
   .child-card {
     grid-template-columns: auto 1fr;
+  }
+
+  .child-card-actions {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
   }
 
   .child-progress {
@@ -428,6 +463,9 @@
   .child-actions {
     flex-direction: column;
   }
+  .child-card-actions { align-items: stretch; }
+  .modal-actions { flex-direction: column-reverse; }
+  .modal-actions button { width: 100%; }
 
   .stats-grid {
     grid-template-columns: 1fr;

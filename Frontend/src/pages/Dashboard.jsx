@@ -12,6 +12,10 @@ export default function Dashboard() {
   const [children, setChildren] = useState([]);
   const [subjectCatalog, setSubjectCatalog] = useState([]);
   const [error, setError] = useState("");
+  const [editingChild, setEditingChild] = useState(null);
+  const [editForm, setEditForm] = useState({ name: "", age: "", grade: "" });
+  const [isSavingChild, setIsSavingChild] = useState(false);
+  const [deletingChildId, setDeletingChildId] = useState(null);
   useEffect(() => {
     if (!parent) {
       navigate("/login");
@@ -46,6 +50,51 @@ export default function Dashboard() {
   }, [parent]);
   function exit() {
     logout(navigate);
+  }
+  function openEditChild(child) {
+    setError("");
+    setEditingChild(child);
+    setEditForm({ name: child.name, age: String(child.age), grade: String(child.grade) });
+  }
+  function closeEditChild() {
+    if (!isSavingChild) setEditingChild(null);
+  }
+  function updateEditField(event) {
+    const { name, value } = event.target;
+    setEditForm((current) => ({ ...current, [name]: value }));
+  }
+  async function saveChild(event) {
+    event.preventDefault();
+    if (isSavingChild || !editingChild) return;
+    setIsSavingChild(true);
+    setError("");
+    try {
+      const data = await api(`/children/${editingChild.id}`, {
+        method: "PUT",
+        body: JSON.stringify(editForm),
+      });
+      setChildren((current) => current.map((child) => (
+        child.id === editingChild.id ? { ...child, ...data.child } : child
+      )));
+      setEditingChild(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSavingChild(false);
+    }
+  }
+  async function removeChild(child) {
+    if (deletingChildId || !window.confirm(`¿Eliminar el perfil de ${child.name}? Esta acción también eliminará su progreso.`)) return;
+    setDeletingChildId(child.id);
+    setError("");
+    try {
+      await api(`/children/${child.id}`, { method: "DELETE" });
+      setChildren((current) => current.filter((item) => item.id !== child.id));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeletingChildId(null);
+    }
   }
   const allPoints = children.reduce(
     (sum, child) => sum + (child.learning?.points || 0),
@@ -119,12 +168,27 @@ export default function Dashboard() {
                         />
                       </div>
                     </div>
-                    <Link
-                      to={`/aprende?child=${child.id}`}
-                      className="primary-action"
-                    >
-                      Aprender ahora
-                    </Link>
+                    <div className="child-card-actions">
+                      <Link
+                        to={`/aprende?child=${child.id}`}
+                        className="primary-action"
+                      >
+                        Aprender ahora
+                      </Link>
+                      <div className="child-actions">
+                        <button type="button" className="secondary-action" onClick={() => openEditChild(child)}>
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          className="danger-action"
+                          onClick={() => removeChild(child)}
+                          disabled={deletingChildId === child.id}
+                        >
+                          {deletingChildId === child.id ? "Eliminando..." : "Eliminar"}
+                        </button>
+                      </div>
+                    </div>
                     <div className="child-guides-wrapper">
                       <StudyGuideDownloader child={child} />
                     </div>
@@ -166,6 +230,45 @@ export default function Dashboard() {
           </article>
         </section>
       </main>
+      {editingChild && (
+        <div className="modal-backdrop" role="presentation" onMouseDown={closeEditChild}>
+          <section className="edit-child-modal" role="dialog" aria-modal="true" aria-labelledby="edit-child-title" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <span className="dashboard-label">PERFIL DEL ESTUDIANTE</span>
+                <h2 id="edit-child-title">Editar perfil</h2>
+              </div>
+              <button type="button" className="modal-close" onClick={closeEditChild} disabled={isSavingChild} aria-label="Cerrar">×</button>
+            </div>
+            <form onSubmit={saveChild}>
+              <div className="form-group">
+                <label htmlFor="edit-child-name">Nombre completo</label>
+                <input id="edit-child-name" name="name" value={editForm.name} onChange={updateEditField} required />
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="edit-child-age">Edad</label>
+                  <input id="edit-child-age" name="age" type="number" min="3" max="12" value={editForm.age} onChange={updateEditField} required />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="edit-child-grade">Grado</label>
+                  <select id="edit-child-grade" name="grade" value={editForm.grade} onChange={updateEditField} required>
+                    <option value="1">1.º grado</option>
+                    <option value="2">2.º grado</option>
+                    <option value="3">3.º grado</option>
+                    <option value="4">4.º grado</option>
+                    <option value="5">5.º grado</option>
+                  </select>
+                </div>
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="secondary-action" onClick={closeEditChild} disabled={isSavingChild}>Cancelar</button>
+                <button type="submit" className="primary-action" disabled={isSavingChild}>{isSavingChild ? "Guardando..." : "Guardar cambios"}</button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

@@ -117,8 +117,58 @@ def add_child():
     data = request.get_json(silent=True) or {}
     try: name, age, grade = data.get("name", "").strip(), int(data.get("age")), int(data.get("grade"))
     except (TypeError, ValueError): return jsonify({"error": "Revisa el nombre, la edad y el grado."}), 400
-    if not name or age < 5 or age > 12 or grade < 1 or grade > 5: return jsonify({"error": "Usa una edad entre 5 y 12 años y un grado de 1.º a 5.º."}), 400
+    if not name or age < 3 or age > 12 or grade < 1 or grade > 5: return jsonify({"error": "Usa una edad entre 3 y 12 años y un grado de 1.º a 5.º."}), 400
     child_id = query("INSERT INTO children (parent_id, name, age, grade, avatar) VALUES (%s, %s, %s, %s, %s)", (g.parent["id"], name, age, grade, data.get("avatar", "🌟"))); commit()
     return jsonify({"child": query("SELECT * FROM children WHERE id = %s", (child_id,), True)[0]}), 201
+
+
+def child_payload(data):
+    """Valida y normaliza los datos editables de un perfil infantil."""
+    try:
+        name = data.get("name", "").strip()
+        age = int(data.get("age"))
+        grade = int(data.get("grade"))
+    except (AttributeError, TypeError, ValueError):
+        return None, "Revisa el nombre, la edad y el grado."
+    if not name or age < 3 or age > 12 or grade < 1 or grade > 5:
+        return None, "Usa una edad entre 3 y 12 años y un grado de 1.º a 5.º."
+    return {"name": name, "age": age, "grade": grade}, None
+
+
+@app.put("/api/children/<int:child_id>")
+@auth_parent
+def update_child(child_id):
+    child = query(
+        "SELECT id FROM children WHERE id = %s AND parent_id = %s",
+        (child_id, g.parent["id"]),
+        True,
+    )
+    if not child:
+        return jsonify({"error": "No encontramos ese perfil infantil."}), 404
+
+    payload, error = child_payload(request.get_json(silent=True) or {})
+    if error:
+        return jsonify({"error": error}), 400
+    query(
+        "UPDATE children SET name = %s, age = %s, grade = %s WHERE id = %s AND parent_id = %s",
+        (payload["name"], payload["age"], payload["grade"], child_id, g.parent["id"]),
+    )
+    commit()
+    return jsonify({"child": query("SELECT * FROM children WHERE id = %s", (child_id,), True)[0]})
+
+
+@app.delete("/api/children/<int:child_id>")
+@auth_parent
+def delete_child(child_id):
+    child = query(
+        "SELECT id FROM children WHERE id = %s AND parent_id = %s",
+        (child_id, g.parent["id"]),
+        True,
+    )
+    if not child:
+        return jsonify({"error": "No encontramos ese perfil infantil."}), 404
+    query("DELETE FROM children WHERE id = %s AND parent_id = %s", (child_id, g.parent["id"]))
+    commit()
+    return jsonify({"ok": True})
 
 if __name__ == "__main__": app.run(debug=True, port=int(os.getenv("PORT", "5000")))
