@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import io
 
-from flask import Blueprint, g, jsonify, request, send_file
+from flask import Blueprint, current_app, g, jsonify, request, send_file
 
 from ..auth_sessions import auth_parent
 from ..db import query
@@ -103,8 +103,14 @@ def pdf():
     child, child_error = _child_for_requested_guide(grade)
     if child_error:
         return child_error
+    # La guía se comparte por materia y grado; así puede reutilizarse desde
+    # la caché sin mezclar el nombre de un perfil con otro.
     guide = build_guide(subject, grade)
-    pdf_bytes, cache_hit = cached_pdf_for_guide(guide)
+    try:
+        pdf_bytes, cache_hit = cached_pdf_for_guide(guide)
+    except Exception:
+        current_app.logger.exception("No se pudo generar la guía PDF")
+        return jsonify({"error": "No pudimos generar la guía en este momento. Intenta nuevamente."}), 500
     filename = f"Guia_Estudio_{guide.subject_slug}_{grade}.pdf"
     response = send_file(
         io.BytesIO(pdf_bytes),

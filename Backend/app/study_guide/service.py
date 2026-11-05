@@ -20,7 +20,7 @@ from ..learning_content import ACTIVITIES, activity_for_grade
 from ..subject_units import SUBJECTS
 
 
-CACHE_RENDER_VERSION = "chromium-svg-v1"
+CACHE_RENDER_VERSION = "fpdf-render-v2"
 CACHE_DIR = Path(__file__).resolve().parents[2] / "cache" / "study_guides"
 _CACHE_LOCK = Lock()
 

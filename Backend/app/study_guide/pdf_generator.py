@@ -64,6 +64,12 @@ def _template_context(guide):
 
 def render_pdf(guide):
     """Devuelve los bytes del PDF terminado."""
+    # Render Free no necesita levantar Chromium ni depender de GTK/Pango.
+    # FPDF evita errores de memoria y conexiones interrumpidas al generar la
+    # primera guía después de que el servicio despierta.
+    renderer = os.getenv("PDF_RENDERER", "auto").lower()
+    if renderer == "fpdf" or (renderer == "auto" and os.getenv("RENDER_SERVICE_ID")):
+        return _render_fpdf(guide)
     chromium_pdf = _render_chromium(guide)
     if chromium_pdf is not None:
         return chromium_pdf
