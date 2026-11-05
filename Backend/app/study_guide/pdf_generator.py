@@ -64,16 +64,18 @@ def _template_context(guide):
 
 def render_pdf(guide):
     """Devuelve los bytes del PDF terminado."""
-    # Render Free no necesita levantar Chromium ni depender de GTK/Pango.
-    # FPDF evita errores de memoria y conexiones interrumpidas al generar la
-    # primera guía después de que el servicio despierta.
+    # La guía debe conservar el diseño infantil HTML/CSS. FPDF queda solo
+    # como último respaldo cuando el entorno no tiene un renderizador web.
     renderer = os.getenv("PDF_RENDERER", "auto").lower()
-    if renderer == "fpdf" or (renderer == "auto" and os.getenv("RENDER_SERVICE_ID")):
+    if renderer == "fpdf":
         return _render_fpdf(guide)
-    chromium_pdf = _render_chromium(guide)
-    if chromium_pdf is not None:
-        return chromium_pdf
+    if renderer in {"auto", "chromium"}:
+        chromium_pdf = _render_chromium(guide)
+        if chromium_pdf is not None:
+            return chromium_pdf
     html_renderer = _load_weasyprint()
+    if html_renderer is None and renderer == "weasyprint":
+        raise RuntimeError("WeasyPrint no está disponible en este entorno.")
     if html_renderer is None:
         return _render_fpdf(guide)
     environment = Environment(

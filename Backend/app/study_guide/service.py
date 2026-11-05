@@ -20,7 +20,7 @@ from ..learning_content import ACTIVITIES, activity_for_grade
 from ..subject_units import SUBJECTS
 
 
-CACHE_RENDER_VERSION = "fpdf-child-render-v3"
+CACHE_RENDER_VERSION = "html-child-render-v4"
 CACHE_DIR = Path(__file__).resolve().parents[2] / "cache" / "study_guides"
 _CACHE_LOCK = Lock()
 
@@ -266,7 +266,12 @@ def _activity_order(activity):
 
 
 def _base_url():
-    return os.getenv("PUBLIC_BASE_URL", "http://localhost:5173").rstrip("/")
+    configured = os.getenv("PUBLIC_BASE_URL")
+    if configured:
+        return configured.rstrip("/")
+    if os.getenv("RENDER_SERVICE_ID"):
+        return "https://edutopia-frontend.onrender.com"
+    return "http://localhost:5173"
 
 
 def _qr_url(activity_key, grade, child_id=None):
@@ -463,7 +468,7 @@ def cached_pdf_for_guide(guide):
     from .pdf_generator import render_pdf
 
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    child_suffix = f"_child_{guide.child_id}" if guide.child_id is not None else "_general"
+    child_suffix = f"_child_{guide.child_id}" if guide.child_id is not None else ""
     cache_name = f"Guia_Estudio_{guide.subject_slug}_{guide.grade}{child_suffix}"
     path = CACHE_DIR / f"{cache_name}.pdf"
     marker = CACHE_DIR / f"{cache_name}.meta"
