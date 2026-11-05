@@ -160,6 +160,10 @@ def update_child(child_id):
 @app.delete("/api/children/<int:child_id>")
 @auth_parent
 def delete_child(child_id):
+    data = request.get_json(silent=True) or {}
+    password = data.get("password", "")
+    if not isinstance(password, str) or not check_password_hash(g.parent["password_hash"], password):
+        return jsonify({"error": "La contraseña no es correcta. No se eliminó el perfil."}), 403
     child = query(
         "SELECT id FROM children WHERE id = %s AND parent_id = %s",
         (child_id, g.parent["id"]),

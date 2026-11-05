@@ -311,6 +311,36 @@ button {
   color: var(--text-muted);
 }
 
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  padding-right: 54px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.password-toggle:hover {
+  color: var(--primary);
+  background: var(--muted-surface);
+}
+
 .auth-button {
   width: 100%;
   padding: 16px;

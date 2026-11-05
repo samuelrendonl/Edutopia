@@ -16,6 +16,10 @@ export default function Dashboard() {
   const [editForm, setEditForm] = useState({ name: "", age: "", grade: "" });
   const [isSavingChild, setIsSavingChild] = useState(false);
   const [deletingChildId, setDeletingChildId] = useState(null);
+  const [pendingDeleteChild, setPendingDeleteChild] = useState(null);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
   useEffect(() => {
     if (!parent) {
       navigate("/login");
@@ -83,15 +87,32 @@ export default function Dashboard() {
       setIsSavingChild(false);
     }
   }
-  async function removeChild(child) {
-    if (deletingChildId || !window.confirm(`¿Eliminar el perfil de ${child.name}? Esta acción también eliminará su progreso.`)) return;
-    setDeletingChildId(child.id);
+  function openDeleteConfirmation(child) {
+    if (deletingChildId) return;
+    setDeleteError("");
+    setDeletePassword("");
+    setShowDeletePassword(false);
+    setPendingDeleteChild(child);
+  }
+  function closeDeleteConfirmation() {
+    if (!deletingChildId) setPendingDeleteChild(null);
+  }
+  async function removeChild(event) {
+    event.preventDefault();
+    if (deletingChildId || !pendingDeleteChild || !deletePassword) return;
+    setDeletingChildId(pendingDeleteChild.id);
     setError("");
+    setDeleteError("");
     try {
-      await api(`/children/${child.id}`, { method: "DELETE" });
-      setChildren((current) => current.filter((item) => item.id !== child.id));
+      await api(`/children/${pendingDeleteChild.id}`, {
+        method: "DELETE",
+        body: JSON.stringify({ password: deletePassword }),
+      });
+      setChildren((current) => current.filter((item) => item.id !== pendingDeleteChild.id));
+      setPendingDeleteChild(null);
+      setDeletePassword("");
     } catch (err) {
-      setError(err.message);
+      setDeleteError(err.message);
     } finally {
       setDeletingChildId(null);
     }
@@ -182,10 +203,10 @@ export default function Dashboard() {
                         <button
                           type="button"
                           className="danger-action"
-                          onClick={() => removeChild(child)}
-                          disabled={deletingChildId === child.id}
+                          onClick={() => openDeleteConfirmation(child)}
+                          disabled={Boolean(deletingChildId)}
                         >
-                          {deletingChildId === child.id ? "Eliminando..." : "Eliminar"}
+                          Eliminar
                         </button>
                       </div>
                     </div>
@@ -264,6 +285,43 @@ export default function Dashboard() {
               <div className="modal-actions">
                 <button type="button" className="secondary-action" onClick={closeEditChild} disabled={isSavingChild}>Cancelar</button>
                 <button type="submit" className="primary-action" disabled={isSavingChild}>{isSavingChild ? "Guardando..." : "Guardar cambios"}</button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
+      {pendingDeleteChild && (
+        <div className="modal-backdrop" role="presentation" onMouseDown={closeDeleteConfirmation}>
+          <section className="delete-child-modal" role="dialog" aria-modal="true" aria-labelledby="delete-child-title" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="delete-alert-icon"><Icon name="shield" size={34} /></div>
+            <span className="dashboard-label delete-alert-label">CONFIRMACIÓN DE SEGURIDAD</span>
+            <h2 id="delete-child-title">¿Eliminar a {pendingDeleteChild.name}?</h2>
+            <p className="delete-alert-text">Esta acción eliminará su perfil y todo el progreso asociado. Para continuar, confirma que eres el adulto responsable.</p>
+            {deleteError && <div className="form-error">{deleteError}</div>}
+            <form onSubmit={removeChild}>
+              <div className="form-group">
+                <label htmlFor="delete-password">Contraseña de tu cuenta</label>
+                <div className="password-field">
+                  <input
+                    id="delete-password"
+                    type={showDeletePassword ? "text" : "password"}
+                    value={deletePassword}
+                    onChange={(event) => setDeletePassword(event.target.value)}
+                    placeholder="Escribe tu contraseña"
+                    autoComplete="current-password"
+                    required
+                    autoFocus
+                  />
+                  <button type="button" className="password-toggle" onClick={() => setShowDeletePassword((current) => !current)} aria-label={showDeletePassword ? "Ocultar contraseña" : "Mostrar contraseña"}>
+                    <Icon name={showDeletePassword ? "eyeOff" : "eye"} size={20} />
+                  </button>
+                </div>
+              </div>
+              <div className="modal-actions delete-modal-actions">
+                <button type="button" className="secondary-action" onClick={closeDeleteConfirmation} disabled={Boolean(deletingChildId)}>Conservar perfil</button>
+                <button type="submit" className="danger-confirm-button" disabled={Boolean(deletingChildId) || !deletePassword}>
+                  {deletingChildId ? "Eliminando..." : "Sí, eliminar perfil"}
+                </button>
               </div>
             </form>
           </section>
