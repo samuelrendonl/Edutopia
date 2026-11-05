@@ -14,3 +14,4 @@ Pillow==10.4.0
 # Respaldo para Windows cuando WeasyPrint no encuentra GTK/Pango.
 fpdf2==2.7.9
 playwright==1.64.1
+gunicorn==22.0.0
