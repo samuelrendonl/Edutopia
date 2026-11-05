@@ -16,6 +16,22 @@ export async function api(path, options = {}) {
   return data;
 }
 
+export async function fetchStudyGuidePdf(subject, grade, childId) {
+  const parent = getParent();
+  const params = new URLSearchParams({ subject, grade: String(grade) });
+  if (childId) params.set("child_id", String(childId));
+  const response = await fetch(`${API_URL}/study-guides/pdf?${params}`, {
+    headers: parent?.token ? { "X-Auth-Token": parent.token } : {},
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    const error = new Error(data.error || "No pudimos generar la guía.");
+    error.status = response.status;
+    throw error;
+  }
+  return response.blob();
+}
+
 export const saveParent = (parent) => {
   localStorage.setItem("edutopia_parent", JSON.stringify(parent));
   window.dispatchEvent(new Event("edutopia-auth-change"));
@@ -30,12 +46,15 @@ export function getParent() {
   }
   return null;
 }
-export const logout = () => {
+export const logout = (navigate) => {
   localStorage.removeItem("edutopia_parent");
   window.dispatchEvent(new Event("edutopia-auth-change"));
+  if (navigate) {
+    navigate("/login");
+  }
 };
 
-const LEARNING_CACHE_KEY = "edutopia_learning_catalog_v3";
+const LEARNING_CACHE_KEY = "edutopia_learning_catalog_v5";
 const CACHE_MAX_AGE = 6 * 60 * 60 * 1000;
 
 export function getCachedLearningCatalog(grade = 3) {

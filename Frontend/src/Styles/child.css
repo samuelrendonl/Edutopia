@@ -1,6 +1,6 @@
 .child-page {
   min-height: 100vh;
-  background: #f8fafc;
+  background: var(--background);
 }
 
 .child-container {
@@ -15,7 +15,7 @@
   width: 100%;
   max-width: 600px;
   padding: 42px;
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 20px;
   box-shadow: 0 20px 50px rgba(23, 32, 51, 0.08);
@@ -72,8 +72,8 @@
   width: 100%;
   padding: 13px 15px;
   color: var(--dark);
-  background: white;
-  border: 1px solid #dfe3eb;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 10px;
   outline: none;
   transition: 0.2s ease;
@@ -110,12 +110,12 @@
 
 .child-cancel-button {
   color: var(--dark);
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--border);
 }
 
 .child-cancel-button:hover {
-  background: #f4f5f8;
+  background: var(--muted-surface);
 }
 
 .child-submit-button {

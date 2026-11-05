@@ -1,13 +1,22 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import "../Styles/child.css";
-import { api } from "../api";
+import { api, getParent } from "../api";
 
 function RegisterChild() {
   const navigate = useNavigate();
 
   const [error, setError] = useState("");
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    const parent = getParent();
+    if (!parent) {
+      navigate("/login", { replace: true });
+    }
+  }, [navigate]);
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);

@@ -1,6 +1,6 @@
 import Logo from "./logo";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getParent } from "../api";
 import "./../Styles/navbar.css";
 import Icon from "./Icon";
@@ -14,9 +14,15 @@ function applyTheme(theme) {
 }
 
 function Navbar() {
+  const navigate = useNavigate();
   const [parent, setParent] = useState(() => getParent());
-  const [theme, setTheme] = useState(() => localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light");
-  useEffect(() => { applyTheme(theme); localStorage.setItem(THEME_KEY, theme); }, [theme]);
+  const [theme, setTheme] = useState(() =>
+    localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light",
+  );
+  useEffect(() => {
+    applyTheme(theme);
+    localStorage.setItem(THEME_KEY, theme);
+  }, [theme]);
   useEffect(() => {
     const refreshSession = () => setParent(getParent());
     window.addEventListener("edutopia-auth-change", refreshSession);
@@ -26,24 +32,47 @@ function Navbar() {
       window.removeEventListener("storage", refreshSession);
     };
   }, []);
+
+  const handleLogoClick = () => {
+    if (parent) {
+      navigate("/Dashboard");
+    } else {
+      navigate("/");
+    }
+  };
+
   return (
     <nav className="navbar">
-      <Logo variant="navbar" />
+      <button
+        type="button"
+        className="navbar-logo"
+        onClick={handleLogoClick}
+        aria-label={parent ? "Ir al panel familiar" : "Ir al inicio"}
+      >
+        <Logo variant="navbar" />
+      </button>
 
       <div className="navbar-actions">
-        {parent
-          ? <Link to="/Dashboard" className="nav-login">Mi familia</Link>
-          : <Link to="/login" className="nav-login">Iniciar sesión</Link>}
+        {parent ? (
+          parent.role === "admin" ? (
+            <Link to="/admin" className="nav-learn">Administración</Link>
+          ) : (
+            <Link to="/Dashboard" className="nav-learn">Mi familia</Link>
+          )
+        ) : (
+          <Link to="/login" className="nav-learn">
+            Iniciar sesión
+          </Link>
+        )}
 
-        <Link to="/aprende" className="nav-learn">
-          Aprende
-        </Link>
         <button
           type="button"
           className="theme-toggle"
           aria-label={`Tema actual: ${theme === "dark" ? "oscuro" : "claro"}. Cambiar tema`}
           title={`Tema: ${theme === "dark" ? "oscuro" : "claro"}`}
-          onClick={() => setTheme(current => current === "dark" ? "light" : "dark")}
+          onClick={() =>
+            setTheme((current) => (current === "dark" ? "light" : "dark"))
+          }
         >
           <Icon name={theme === "dark" ? "sun" : "cloud"} size={18} />
           <span>{theme === "dark" ? "Oscuro" : "Claro"}</span>

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Guía de {{ guide.subject }} · {{ guide.grade }}.º</title>
+  <style>{{ css }}</style>
+</head>
+<body style="--subject-color: {{ guide.color }}">
+  <section class="cover page-break">
+    <svg class="confetti confetti-one" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2L12 2Z" fill="currentColor"/></svg>
+    <svg class="confetti confetti-two" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" fill="currentColor"/></svg>
+    <svg class="confetti confetti-three" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2L12 2Z" fill="currentColor"/></svg>
+    <img class="brand-logo" src="{{ logo_data_uri }}" alt="Edutopia">
+    <div class="kawaii-badge"><span class="badge-icon">{{ icons.rainbow|safe }}</span> GUÍA DE ESTUDIO</div>
+    <h1>{{ guide.subject }}</h1>
+    <h2>{{ guide.grade }}.º grado</h2>
+    <div class="student">Guía base para practicar en casa</div>
+    <p class="cover-description">{{ guide.description }}</p>
+    <svg class="cover-friends" viewBox="0 0 300 105" aria-label="Dos estudiantes aprendiendo">
+      <circle cx="68" cy="35" r="24" fill="#f4b183"/><path d="M43 32c4-24 48-27 53 2-14-7-34-7-53-2Z" fill="#5b3a29"/>
+      <circle cx="60" cy="37" r="3" fill="#24324a"/><circle cx="77" cy="37" r="3" fill="#24324a"/><path d="M60 49q10 9 20 0" fill="none" stroke="#24324a" stroke-width="3"/>
+      <path d="M35 103q3-41 33-41t33 41" fill="#5b5ce2"/><path d="M104 103q3-41 33-41t33 41" fill="#21a889"/>
+      <circle cx="137" cy="35" r="24" fill="#8d5524"/><path d="M113 30q10-30 49-8l6 16q-30-11-55-8Z" fill="#2e1a10"/>
+      <circle cx="129" cy="37" r="3" fill="#24324a"/><circle cx="146" cy="37" r="3" fill="#24324a"/><path d="M129 49q10 9 20 0" fill="none" stroke="#24324a" stroke-width="3"/>
+      <path d="M165 64l28-17 30 20-28 17Z" fill="#ffc300"/><path d="M193 64v22" stroke="#ff7a00" stroke-width="3"/>
+      <circle cx="240" cy="20" r="7" fill="#ffc300"/><circle cx="263" cy="43" r="5" fill="#d56aff"/><circle cx="220" cy="33" r="4" fill="#35c900"/>
+    </svg>
+    <div class="cover-ribbon"><span class="inline-icon">{{ icons.rocket|safe }}</span> Aprender · practicar · crear</div>
+  </section>
+
+  <section class="page-break">
+    <div class="section-title"><span class="section-icon">{{ icons.map|safe }}</span><div><span class="eyebrow">TU RUTA EDUTOPIA</span><h1>Mi ruta de aprendizaje</h1></div></div>
+    <div class="welcome-card"><span class="inline-icon">{{ icons.bulb|safe }}</span> Esta guía y la app van juntas: aprende aquí, practica en Edutopia y vuelve a intentarlo cuando quieras.</div>
+    <h2><span class="heading-icon">{{ icons.target|safe }}</span> Mis objetivos</h2>
+    <div class="objective-grid">{% for objective in guide.objectives %}<div class="mini-card"><span class="mini-icon">{{ icons.star|safe }}</span>{{ objective }}</div>{% endfor %}</div>
+    <h2><span class="heading-icon">{{ icons.book|safe }}</span> Misiones de aprendizaje</h2>
+    <div class="mission-grid">{% for unit in guide.units %}{% set activity = unit.activities[0] %}<div class="mission-card"><span class="mission-number">{{ unit.number }}</span><div><strong>{{ activity.title }}</strong><small>{{ activity.learning_phase }} · {{ activity.minutes }} min</small></div></div>{% endfor %}</div>
+  </section>
+
+  {% for unit in guide.units %}
+    {% for activity in unit.activities %}
+      <section class="unit page-break">
+        <div class="unit-hero"><div class="unit-number">MISIÓN {{ unit.number }} · {{ activity.learning_phase }}</div><h1>{{ activity.title }}</h1><span class="hero-star">{{ icons.star|safe }}</span></div>
+        <p class="muted description-card">{{ activity.description }}</p>
+        {% if activity.objective %}<div class="objective"><span class="card-emoji">{{ icons.target|safe }}</span><div><strong>Meta de esta misión</strong><br>{{ activity.objective }}</div></div>{% endif %}
+        <div class="app-connection"><span class="connection-icon">{{ icons.phone|safe }}</span><div><strong>También está en Aprende</strong><br><span class="chip">{{ activity.kind }}</span><span class="chip">{{ icons.clock|safe }} {{ activity.minutes }} min</span><span class="chip">{{ icons.star|safe }} {{ activity.points }} puntos</span>{% if activity.prerequisites %}<br><small>Antes de empezar: {{ activity.prerequisites|join(', ') }}</small>{% endif %}</div></div>
+        <h2><span class="heading-icon">{{ icons.book|safe }}</span> Aprendemos</h2>
+        {% if activity.lesson %}<div class="lesson-list">{% for line in activity.lesson %}<div class="lesson-item"><span>{{ icons.sparkle|safe }}</span><p>{{ line }}</p></div>{% endfor %}</div>{% else %}<p>Explora esta actividad y explica con tus palabras lo que descubriste.</p>{% endif %}
+        <div class="qr-box"><img src="{{ activity.qr_data_uri }}" alt="Código QR para abrir {{ activity.title }}"><span><strong>Escanea y juega</strong><br>Abre esta misión en Edutopia<br><small>{{ activity.kind }} · misma actividad, mismo progreso</small></span></div>
+        {% if activity.questions %}
+          <h2><span class="heading-icon">{{ icons.brain|safe }}</span> Practico</h2>
+          {% for question in activity.questions %}
+            {% if question.example %}
+              <div class="example"><div class="example-title"><span class="inline-icon">{{ icons.check|safe }}</span> Ejemplo resuelto · {{ question.number }}</div><p>{{ question.prompt }}</p><p>Respuesta: <strong>{{ question.answer_text }}</strong></p></div>
+            {% else %}
+              <div class="question"><p><span class="question-number">{{ question.number }}</span><strong>{{ question.prompt }}</strong></p><div class="options">{% for option in question.options %}<div class="option"><span>{{ "abc"[loop.index0] }}</span>{{ option }}</div>{% endfor %}</div></div>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+        {% if activity.project %}<div class="project"><h2><span class="heading-icon">{{ icons.palette|safe }}</span> Proyecto para casa</h2><p>{{ activity.project }}</p><p class="write-line">Evidencia o explicación: ______________________________________________</p></div>{% endif %}
+      </section>
+    {% endfor %}
+  {% endfor %}
+
+  <section class="page-break">
+    <div class="section-title"><span class="section-icon">{{ icons.trophy|safe }}</span><div><span class="eyebrow">CELEBRO LO QUE APRENDÍ</span><h1>Proyecto y autoevaluación</h1></div></div>
+    {% if guide.projects %}<h2><span class="heading-icon">{{ icons.palette|safe }}</span> Ideas de proyecto</h2><div class="project-list">{% for project in guide.projects %}<div><span class="inline-icon">{{ icons.sparkle|safe }}</span> {{ project }}</div>{% endfor %}</div>{% endif %}
+    <h2><span class="heading-icon">{{ icons.target|safe }}</span> Mi autoevaluación</h2>
+    {% for item in guide.self_assessment %}<div class="check-row">{{ icons.check|safe }} {{ item }} <span class="rating-dots"><i></i><i></i><i></i></span></div>{% endfor %}
+    <h2><span class="heading-icon">{{ icons.family|safe }}</span> Rúbrica familiar</h2>
+    <table><thead><tr><th>Criterio</th><th>¿Cómo lo demostré?</th></tr></thead><tbody>{% for row in guide.rubric %}<tr><td><strong>{{ row.criterion }}</strong><br>{{ row.description }}</td><td></td></tr>{% endfor %}</tbody></table>
+  </section>
+
+  <section class="page-break">
+    <div class="section-title"><span class="section-icon">{{ icons.calendar|safe }}</span><div><span class="eyebrow">MI PLAN</span><h1>Calendario de 36 semanas</h1></div></div>
+    <table class="calendar"><thead><tr><th>Semana</th><th>Enfoque</th><th>Momento</th></tr></thead><tbody>{% for week in guide.calendar %}<tr><td>{{ week.week }}</td><td>{{ week.title }}</td><td>{{ week.phase }}</td></tr>{% endfor %}</tbody></table>
+  </section>
+
+  <section class="page-break solutions">
+    <div class="section-title"><span class="section-icon">{{ icons.puzzle|safe }}</span><div><span class="eyebrow">REVISO DESPUÉS DE INTENTARLO</span><h1>Solucionario</h1></div></div>
+    <p>Usa esta sección después de intentarlo. Si te equivocas, vuelve a leer la explicación y prueba de nuevo.</p>
+    {% for answer in guide.solutions %}<div class="solution"><span class="inline-icon">{{ icons.check|safe }}</span><strong>{{ answer.number }}</strong> {{ answer.answer_text }}</div>{% endfor %}
+  </section>
+
+  <section class="back-cover">
+    <img class="brand-logo" src="{{ logo_data_uri }}" alt="Edutopia">
+    <svg class="cover-friends" viewBox="0 0 300 105" aria-label="Estudiantes celebrando">
+      <circle cx="82" cy="38" r="24" fill="#f4b183"/><path d="M57 32c8-22 43-23 51 4-16-6-32-6-51-4Z" fill="#5b3a29"/><circle cx="74" cy="40" r="3" fill="#24324a"/><circle cx="91" cy="40" r="3" fill="#24324a"/><path d="M74 51q10 9 20 0" fill="none" stroke="#24324a" stroke-width="3"/>
+      <path d="M48 105q4-42 34-42t34 42" fill="#f28c28"/><path d="M156 105q4-42 34-42t34 42" fill="#3ba9dd"/>
+      <circle cx="179" cy="38" r="24" fill="#8d5524"/><path d="M155 32q7-26 49-10l2 18q-28-12-51-8Z" fill="#2e1a10"/><circle cx="171" cy="40" r="3" fill="#24324a"/><circle cx="188" cy="40" r="3" fill="#24324a"/><path d="M171 51q10 9 20 0" fill="none" stroke="#24324a" stroke-width="3"/>
+      <path d="M115 16l14-14 14 14-14 14Z" fill="#5b5ce2"/><path d="M129 30v35" stroke="#5b5ce2" stroke-width="4"/><circle cx="250" cy="20" r="8" fill="#ffc300"/><circle cx="270" cy="42" r="5" fill="#d56aff"/><circle cx="230" cy="41" r="5" fill="#35c900"/>
+    </svg>
+    <div class="kawaii-badge"><span class="badge-icon">{{ icons.star|safe }}</span> MISIÓN CUMPLIDA</div><h1>¡Tú puedes seguir aprendiendo!</h1>
+    <p>Cada pregunta es una oportunidad para descubrir algo nuevo.</p>
+  </section>
+</body>
+</html>

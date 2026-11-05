@@ -1,4 +1,4 @@
-USE edutopia;
+USE finexcon_edutopia;
 
 CREATE TABLE IF NOT EXISTS child_activity_progress (
   id INT AUTO_INCREMENT PRIMARY KEY,

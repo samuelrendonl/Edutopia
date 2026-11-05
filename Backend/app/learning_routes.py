@@ -1,14 +1,18 @@
 """API de actividades y progreso por perfil infantil."""
 
-from functools import wraps
+from functools import lru_cache, wraps
 from flask import Blueprint, g, jsonify, request
 
 from .learning_content import ACTIVITIES, activity_for_grade, public_activity
-from .auth_sessions import verify_parent_token
+from .auth_sessions import verify_parent_token, auth_parent
+from .subject_units import SUBJECTS
 from juegos.backend.catalog import evaluate_game
 
 learning = Blueprint("learning", __name__, url_prefix="/api/learning")
-_catalog_cache = {}
+@lru_cache(maxsize=5)
+def _catalog_for_grade(grade):
+    """Genera una única versión inmutable por grado durante la vida del proceso."""
+    return tuple(public_activity(item, grade) for item in ACTIVITIES)
 
 
 def _query(sql, params=(), fetch=False):
@@ -36,16 +40,6 @@ def _child_access(fn):
     return wrapped
 
 
-@learning.get("/activities")
-def activities():
-    grade = request.args.get("grade", default=3, type=int)
-    grade = min(5, max(1, grade or 3))
-    # Catálogo inmutable en memoria por grado: lecturas rápidas sin consultar MySQL.
-    if grade not in _catalog_cache:
-        _catalog_cache[grade] = [public_activity(item, grade) for item in ACTIVITIES]
-    return jsonify({"grade": grade, "activities": _catalog_cache[grade]})
-
-
 @learning.get("/children/<int:child_id>/progress")
 @_child_access
 def progress(child_id):
@@ -54,8 +48,21 @@ def progress(child_id):
         (child_id,), True,
     )
     by_key = {row["activity_key"]: row for row in rows}
-    total_points = sum(row["best_score"] for row in rows)
-    completed = len(by_key)
+    known_keys = {item["key"] for item in ACTIVITIES}
+    known_progress = [row for key, row in by_key.items() if key in known_keys]
+    total_points = sum(row["best_score"] for row in known_progress)
+    completed = len(known_progress)
+    by_subject = []
+    for subject in SUBJECTS:
+        subject_activities = [item for item in ACTIVITIES if item["subject"] == subject["name"]]
+        subject_keys = {item["key"] for item in subject_activities}
+        subject_progress = [by_key[key] for key in subject_keys if key in by_key]
+        by_subject.append({
+            "subject": subject["name"],
+            "total": len(subject_activities),
+            "completed": len(subject_progress),
+            "points": sum(item["best_score"] for item in subject_progress),
+        })
     return jsonify({
         "child": g.child,
         "completed": completed,
@@ -63,6 +70,7 @@ def progress(child_id):
         "progress": round(completed * 100 / len(ACTIVITIES)),
         "points": total_points,
         "activities": by_key,
+        "subjects": by_subject,
     })
 
 
@@ -107,29 +115,26 @@ def submit(child_id):
     })
 
 
-@learning.post("/guest/submit")
-def submit_guest():
-    """Evalúa una sesión de prueba sin cuenta ni escrituras en la base de datos."""
-    data = request.get_json(silent=True) or {}
-    activity_key = data.get("activity_key")
-    answers = data.get("answers")
-    activity = next((item for item in ACTIVITIES if item["key"] == activity_key), None)
-    grade = data.get("grade", 3)
-    if not isinstance(grade, int) or isinstance(grade, bool) or grade < 1 or grade > 5:
-        return jsonify({"error": "Selecciona un grado entre 1.º y 5.º."}), 400
-    if activity:
-        activity = activity_for_grade(activity, grade)
-    guest_limit = 3 if activity and activity["kind"] == "Juego" else (len(activity["questions"]) if activity else 0)
-    if not activity or not isinstance(answers, list) or len(answers) != guest_limit:
-        return jsonify({"error": "Las respuestas enviadas no corresponden a esta actividad."}), 400
-    if any(not isinstance(answer, int) or isinstance(answer, bool) or answer < 0 or answer >= len(activity["questions"][index]["options"])
-           for index, answer in enumerate(answers)):
-        return jsonify({"error": "Una de las respuestas no es válida."}), 400
-    correct = evaluate_game(activity, answers) if activity["kind"] == "Juego" else sum(answer == question["answer"] for answer, question in zip(answers, activity["questions"]))
-    score = round(correct * activity["points"] / len(activity["questions"]))
-    return jsonify({
-        "correct": correct, "total": len(answers), "earned": score,
-        "best_score": score, "attempts": 1,
-        "message": "¡Excelente trabajo!" if correct == len(answers) else "¡Buen intento! Sigue practicando.",
-        "saved": False,
-    })
+@learning.get("/activities")
+@auth_parent
+def activities():
+    grade = request.args.get("grade", default=3, type=int)
+    grade = min(5, max(1, grade or 3))
+    return jsonify({"grade": grade, "activities": _catalog_for_grade(grade)})
+
+
+@learning.get("/subjects")
+@auth_parent
+def subjects():
+    """Metadatos del catálogo para que la interfaz no duplique el currículo."""
+    result = []
+    for subject in SUBJECTS:
+        activities = [item for item in ACTIVITIES if item["subject"] == subject["name"]]
+        result.append({
+            **subject,
+            "available": bool(activities),
+            "activity_count": len(activities),
+            "learning_count": sum(item["kind"] == "Aprendizaje" for item in activities),
+            "game_count": sum(item["kind"] == "Juego" for item in activities),
+        })
+    return jsonify({"subjects": result, "total_activities": len(ACTIVITIES)})

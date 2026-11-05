@@ -4,19 +4,19 @@ import sys
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PROJECT_ROOT)
-from functools import wraps
-from flask import Flask, g, jsonify, request
-from flask_cors import CORS
-from dotenv import load_dotenv
-from werkzeug.security import check_password_hash, generate_password_hash
-import mysql.connector
-from mysql.connector import Error, IntegrityError
-from app.learning_routes import learning
-from app.auth_sessions import issue_parent_token, verify_parent_token, revoke_parent_token
 
-PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
+from dotenv import load_dotenv
+
 load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 
+from flask import Flask, g, jsonify, request
+from flask_cors import CORS
+from werkzeug.security import check_password_hash, generate_password_hash
+from mysql.connector import IntegrityError
+from app.learning_routes import learning
+from app.auth_sessions import issue_parent_token, revoke_parent_token, auth_parent
+from app.db import DB_CONFIG, get_db, query, commit
+from app.study_guide.routes import study_guides
 
 def load_secret_key():
     configured = os.getenv("SECRET_KEY")
@@ -45,22 +45,20 @@ def load_secret_key():
 app = Flask(__name__)
 app.config["SECRET_KEY"] = load_secret_key()
 app.register_blueprint(learning)
+app.register_blueprint(study_guides)
+from admin_routes import admin
+app.register_blueprint(admin)
 from juegos.backend.routes import games
 app.register_blueprint(games)
-CORS(app, resources={r"/api/*": {"origins": "*"}})
-
-DB_CONFIG = {
-    "host": os.getenv("MYSQL_HOST", "127.0.0.1"),
-    "port": int(os.getenv("MYSQL_PORT", "3306")),
-    "user": os.getenv("MYSQL_USER", "root"),
-    "password": os.getenv("MYSQL_PASSWORD", ""),
-    "database": os.getenv("MYSQL_DATABASE", "edutopia"),
-}
-
-def get_db():
-    if "db" not in g:
-        g.db = mysql.connector.connect(**DB_CONFIG)
-    return g.db
+allowed_origins = [
+    origin.strip()
+    for origin in os.getenv(
+        "CORS_ORIGINS",
+        "http://localhost:5173,http://127.0.0.1:5173",
+    ).split(",")
+    if origin.strip()
+]
+CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
 
 @app.before_request
 def initialize_learning_connection():
@@ -72,26 +70,15 @@ def close_db(_error=None):
     db = g.pop("db", None)
     if db and db.is_connected(): db.close()
 
-def query(sql, params=(), fetch=False):
-    cursor = get_db().cursor(dictionary=True)
-    cursor.execute(sql, params)
-    result = cursor.fetchall() if fetch else cursor.lastrowid
-    cursor.close()
-    return result
-
-def commit(): get_db().commit()
 def row_dict(row): return dict(row) if row else None
 
-def auth_parent(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        parent_id = verify_parent_token(request.headers.get("X-Auth-Token"))
-        if not parent_id: return jsonify({"error": "Inicia sesión para continuar."}), 401
-        parent = query("SELECT * FROM parents WHERE id = %s", (parent_id,), True)
-        if not parent: return jsonify({"error": "La sesión no es válida."}), 401
-        g.parent = parent[0]
-        return fn(*args, **kwargs)
-    return wrapper
+def public_parent(parent):
+    return {
+        "id": parent["id"],
+        "name": parent["name"],
+        "email": parent["email"],
+        "role": parent.get("role", "parent"),
+    }
 
 @app.get("/api")
 def home(): return jsonify({"mensaje": "Backend de Edutopia funcionando con MySQL"})
@@ -104,7 +91,7 @@ def register():
     try:
         parent_id = query("INSERT INTO parents (name, email, password_hash) VALUES (%s, %s, %s)", (name, email, generate_password_hash(password))); commit()
     except IntegrityError: return jsonify({"error": "Este correo ya está registrado."}), 409
-    return jsonify({"parent": {"id": parent_id, "name": name, "email": email}, "token": issue_parent_token(parent_id)}), 201
+    return jsonify({"parent": {"id": parent_id, "name": name, "email": email, "role": "parent"}, "token": issue_parent_token(parent_id)}), 201
 
 @app.post("/api/auth/login")
 def login():
@@ -112,7 +99,7 @@ def login():
     rows = query("SELECT * FROM parents WHERE email = %s", (data.get("email", "").strip().lower(),), True)
     if not rows or not check_password_hash(rows[0]["password_hash"], data.get("password", "")): return jsonify({"error": "Correo o contraseña incorrectos."}), 401
     parent = rows[0]
-    return jsonify({"parent": {"id": parent["id"], "name": parent["name"], "email": parent["email"]}, "token": issue_parent_token(parent["id"])})
+    return jsonify({"parent": public_parent(parent), "token": issue_parent_token(parent["id"])})
 
 @app.post("/api/auth/logout")
 def logout():

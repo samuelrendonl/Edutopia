@@ -1,0 +1,91 @@
+@page { size: A4; margin: 16mm 14mm 18mm; @bottom-right { content: counter(page); color: #64748b; font-size: 9pt; } }
+* { box-sizing: border-box; }
+body { font-family: "Arial Rounded MT Bold", "Trebuchet MS", "Segoe UI", sans-serif; color: #24324a; font-size: 10.5pt; line-height: 1.45; }
+h1 { color: var(--subject-color); font-size: 25pt; line-height: 1.1; margin: 0 0 10pt; letter-spacing: -.3pt; }
+h2 { color: #334155; font-size: 15pt; margin: 17pt 0 7pt; }
+p { margin: 5pt 0 9pt; }
+ul, ol { padding-left: 20pt; }
+li { margin: 5pt 0; }
+.page-break { page-break-before: always; }
+.svg-icon { display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em; fill: none; }
+.section-title { display: flex; align-items: center; gap: 12pt; margin-bottom: 12pt; }
+.section-title h1 { margin: 2pt 0 0; }
+.section-icon { display: grid; place-items: center; width: 31pt; height: 31pt; color: var(--subject-color); background: #fff0a6; border-radius: 50%; font-size: 18pt; }
+.section-icon .svg-icon { width: 19pt; height: 19pt; }
+.kawaii-badge { display: inline-block; color: #fff; background: #8d25df; border-radius: 20pt; padding: 7pt 14pt; font-size: 10pt; font-weight: bold; letter-spacing: .4pt; }
+.badge-icon, .inline-icon { display: inline-flex; align-items: center; vertical-align: middle; }
+.badge-icon .svg-icon { width: 14pt; height: 14pt; }
+.inline-icon .svg-icon { width: 15pt; height: 15pt; }
+.confetti { position: absolute; width: 16pt; height: 16pt; }
+.confetti-one { top: 30mm; left: 18mm; color: #ff7a00; transform: rotate(-15deg); }
+.confetti-two { top: 48mm; right: 20mm; color: #35c900; font-size: 18pt; }
+.confetti-three { bottom: 47mm; right: 25mm; color: #d56aff; }
+.cover, .back-cover { min-height: 245mm; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: linear-gradient(145deg, #fff9e8, #eef5ff 55%, #f5edff); border: 7pt solid var(--subject-color); padding: 20mm; position: relative; overflow: hidden; }
+.back-cover { page-break-before: always; }
+.cover-mark { color: var(--subject-color); font-weight: bold; letter-spacing: 3pt; font-size: 14pt; }
+.brand-logo { width: 54mm; height: 54mm; object-fit: contain; margin-bottom: 5mm; }
+.cover-friends { width: 82mm; height: 30mm; margin: 5mm 0 2mm; }
+.eyebrow, .unit-number { color: var(--subject-color); font-weight: bold; letter-spacing: 1.5pt; font-size: 9pt; }
+.cover h1 { font-size: 34pt; margin-top: 18pt; }
+.cover h2 { font-size: 23pt; color: #334155; }
+.student { border-bottom: 2pt solid var(--subject-color); padding: 7pt 25pt; font-size: 16pt; margin: 25pt 0; }
+.cover-description { max-width: 125mm; color: #475569; }
+.cover-ribbon { background: var(--subject-color); color: white; padding: 8pt 18pt; border-radius: 18pt; margin-top: 22pt; font-weight: bold; }
+.welcome-card, .description-card { background: #effaff; border: 2pt solid #a9d9f0; border-radius: 12pt; padding: 12pt 14pt; }
+.objective-grid, .mission-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8pt; }
+.mini-card, .mission-card { background: #fff; border: 1pt solid #e3e8f4; border-radius: 10pt; padding: 9pt; box-shadow: 0 3pt 8pt rgba(62, 76, 120, .08); }
+.mini-card { display: flex; gap: 7pt; align-items: flex-start; }
+.mini-icon { color: #ffb400; }
+.mission-card { display: flex; align-items: center; gap: 9pt; border-left: 4pt solid var(--subject-color); }
+.mission-card strong, .mission-card small { display: block; }
+.mission-card small { color: #64748b; margin-top: 3pt; font-size: 8pt; }
+.mission-number { display: grid; place-items: center; flex: 0 0 22pt; width: 22pt; height: 22pt; border-radius: 50%; color: #fff; background: var(--subject-color); font-weight: bold; }
+.heading-icon { display: inline-flex; color: var(--subject-color); margin-right: 4pt; vertical-align: -2pt; }
+.heading-icon .svg-icon { width: 17pt; height: 17pt; }
+.unit-hero { background: linear-gradient(120deg, var(--subject-color), #7c83f2); color: white; border-radius: 12pt; padding: 12pt 15pt; position: relative; margin-bottom: 12pt; }
+.unit-hero h1 { color: white; margin: 4pt 30pt 0 0; font-size: 23pt; }
+.unit-hero .unit-number { color: #fff7b2; }
+.hero-star { position: absolute; right: 15pt; top: 15pt; color: #ffe52c; font-size: 24pt; }
+.hero-star .svg-icon { width: 24pt; height: 24pt; }
+.muted { color: #64748b; }
+.objective, .example, .project { display: flex; gap: 9pt; background: #fff8d9; border-left: 4pt solid var(--subject-color); padding: 9pt 12pt; margin: 10pt 0; border-radius: 9pt; break-inside: avoid; }
+.objective .card-emoji { display: inline-flex; color: var(--subject-color); font-size: 18pt; }
+.card-emoji .svg-icon { width: 19pt; height: 19pt; }
+.app-connection { background: #f0edff; border-left: 4pt solid #8d25df; padding: 8pt 12pt; margin: 10pt 0; border-radius: 7pt; color: #43346b; }
+.connection-icon { float: left; color: #8d25df; font-size: 18pt; margin-right: 8pt; }
+.connection-icon .svg-icon { width: 19pt; height: 19pt; }
+.chip { display: inline-block; color: #fff; background: #8d25df; border-radius: 12pt; padding: 3pt 7pt; margin: 5pt 3pt 0 0; font-size: 8pt; font-weight: bold; }
+.chip .svg-icon { width: 9pt; height: 9pt; }
+.example { display: block; background: #ecfdf5; border-left-color: #16a34a; }
+.example-title { color: #15803d; font-weight: bold; }
+.lesson-list { display: grid; gap: 7pt; }
+.lesson-item { display: flex; align-items: flex-start; gap: 8pt; background: #fff; border: 1pt solid #e8eaf3; border-radius: 9pt; padding: 8pt 10pt; break-inside: avoid; }
+.lesson-item > span { color: #ffb400; font-size: 14pt; }
+.lesson-item > span .svg-icon { width: 14pt; height: 14pt; }
+.lesson-item p { margin: 0; }
+.qr-box { display: flex; align-items: center; gap: 12pt; border: 2pt dashed #3ba9dd; background: #effaff; border-radius: 12pt; padding: 9pt; margin: 14pt 0; width: fit-content; break-inside: avoid; }
+.qr-box img { width: 28mm; height: 28mm; }
+.qr-box small { color: #64748b; }
+.question { background: #fff; border: 1pt solid #e4e8f3; border-radius: 9pt; padding: 8pt 10pt; margin: 8pt 0; page-break-inside: avoid; box-shadow: 0 2pt 5pt rgba(62, 76, 120, .05); }
+.question-number { display: inline-block; color: #fff; background: var(--subject-color); border-radius: 50%; padding: 3pt 5pt; margin-right: 6pt; font-size: 8pt; }
+.options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6pt; margin-top: 7pt; }
+.option { display: flex; align-items: center; gap: 5pt; min-height: 25pt; margin: 0; padding: 5pt 7pt; background: #f8fafc; border: 1pt solid #e5e7eb; border-radius: 15pt; color: #475569; font-size: 9pt; }
+.option span { display: grid; place-items: center; flex: 0 0 16pt; height: 16pt; border-radius: 50%; color: #fff; background: #3ba9dd; font-weight: bold; text-transform: uppercase; }
+.project { display: block; background: #fff3e8; border-left-color: #ff7a00; }
+.project h2 { margin-top: 0; color: #d95f00; }
+.write-line { margin-top: 15pt; }
+.contents li { margin: 7pt 0; }
+.project-list { display: grid; gap: 7pt; }
+.project-list div { padding: 9pt; background: #f5edff; border-radius: 9pt; }
+.check-row { display: flex; align-items: center; justify-content: space-between; gap: 8pt; border-bottom: 1pt solid #dbe3ef; padding: 10pt; background: #f8fbff; border-radius: 7pt; margin: 5pt 0; }
+.check-row > .svg-icon { flex: 0 0 14pt; color: #16a34a; width: 14pt; height: 14pt; }
+.rating-dots { display: inline-flex; gap: 5pt; }
+.rating-dots i { display: block; width: 10pt; height: 10pt; border: 2pt solid #94a3b8; border-radius: 50%; }
+table { border-collapse: collapse; width: 100%; margin-top: 10pt; }
+th, td { border: 1pt solid #cbd5e1; padding: 7pt; text-align: left; vertical-align: top; }
+th { background: var(--subject-color); color: white; }
+.calendar td:first-child { width: 16%; text-align: center; }
+.solution { display: flex; gap: 7pt; border: 1pt solid #bbf7d0; background: #f0fdf4; border-radius: 7pt; padding: 6pt 8pt; margin: 4pt 0; page-break-inside: avoid; }
+.solution span { color: #16a34a; }
+.solutions h1 { margin-bottom: 5pt; }
+@media print { .unit, .question, .lesson-item, .qr-box, .project, .example { break-inside: avoid; } }
