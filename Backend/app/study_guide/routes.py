@@ -74,13 +74,16 @@ def preview():
     child, child_error = _child_for_requested_guide(grade)
     if child_error:
         return child_error
-    # El perfil solo autoriza el grado; el archivo servido es una guía base
-    # compartida por todos los estudiantes de esa materia y grado.
-    guide = build_guide(subject, grade)
+    guide = build_guide(
+        subject,
+        grade,
+        student_name=child["name"] if child else "",
+        child_id=child["id"] if child else None,
+    )
     return jsonify({
         "subject": guide.subject,
         "grade": guide.grade,
-        "student_name": "Guía base",
+        "student_name": guide.student_name,
         "version": guide.version,
         "units": [
             {"number": unit.number, "title": unit.title, "description": unit.description}
@@ -103,9 +106,12 @@ def pdf():
     child, child_error = _child_for_requested_guide(grade)
     if child_error:
         return child_error
-    # La guía se comparte por materia y grado; así puede reutilizarse desde
-    # la caché sin mezclar el nombre de un perfil con otro.
-    guide = build_guide(subject, grade)
+    guide = build_guide(
+        subject,
+        grade,
+        student_name=child["name"] if child else "",
+        child_id=child["id"] if child else None,
+    )
     try:
         pdf_bytes, cache_hit = cached_pdf_for_guide(guide)
     except Exception:

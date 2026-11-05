@@ -20,7 +20,7 @@ from ..learning_content import ACTIVITIES, activity_for_grade
 from ..subject_units import SUBJECTS
 
 
-CACHE_RENDER_VERSION = "fpdf-render-v2"
+CACHE_RENDER_VERSION = "fpdf-child-render-v3"
 CACHE_DIR = Path(__file__).resolve().parents[2] / "cache" / "study_guides"
 _CACHE_LOCK = Lock()
 
@@ -244,6 +244,7 @@ class StudyGuide:
     rubric: list[dict]
     solutions: list[GuideQuestion]
     version: str
+    child_id: int | None = None
 
 
 def normalize_subject(value):
@@ -413,7 +414,7 @@ def build_guide(subject, grade, student_name="", child_id=None):
         for activity in unit.activities
         for question in activity.questions
     ]
-    fingerprint_parts = [canonical, str(grade), metadata["description"]]
+    fingerprint_parts = [canonical, str(grade), metadata["description"], student_name.strip(), str(child_id or "")]
     for unit in units:
         for activity in unit.activities:
             fingerprint_parts.extend([
@@ -428,6 +429,7 @@ def build_guide(subject, grade, student_name="", child_id=None):
                 str(activity.points),
                 "\n".join(activity.lesson),
                 activity.project,
+                activity.qr_url,
             ])
             fingerprint_parts.extend(
                 f"{item.number}:{item.prompt}:{item.answer_text}:{'|'.join(item.options)}"
@@ -452,16 +454,19 @@ def build_guide(subject, grade, student_name="", child_id=None):
         rubric=_rubric(),
         solutions=solutions,
         version=version,
+        child_id=child_id,
     )
 
 
 def cached_pdf_for_guide(guide):
-    """Devuelve el PDF base guardado y lo genera solo si cambió el currículo."""
+    """Devuelve el PDF guardado y lo genera solo si cambió su contenido."""
     from .pdf_generator import render_pdf
 
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    path = CACHE_DIR / f"Guia_Estudio_{guide.subject_slug}_{guide.grade}.pdf"
-    marker = CACHE_DIR / f"Guia_Estudio_{guide.subject_slug}_{guide.grade}.meta"
+    child_suffix = f"_child_{guide.child_id}" if guide.child_id is not None else "_general"
+    cache_name = f"Guia_Estudio_{guide.subject_slug}_{guide.grade}{child_suffix}"
+    path = CACHE_DIR / f"{cache_name}.pdf"
+    marker = CACHE_DIR / f"{cache_name}.meta"
     expected = f"{CACHE_RENDER_VERSION}:{guide.version}"
 
     with _CACHE_LOCK:
