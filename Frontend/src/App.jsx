@@ -35,6 +35,8 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/aprende" element={<Aprende />} />
           <Route path="/study-guide" element={<StudyGuideViewer />} />
+          {/* Compatibilidad con despliegues que redirigen a index.html. */}
+          <Route path="/index.html" element={<StudyGuideViewer />} />
           <Route path="/dashboard/*" element={<Dashboard />} />
           <Route path="/Dashboard/*" element={<Dashboard />} />
           <Route path="/admin" element={<Admin />} />
