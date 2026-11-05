@@ -74,12 +74,10 @@ def preview():
     child, child_error = _child_for_requested_guide(grade)
     if child_error:
         return child_error
-    guide = build_guide(
-        subject,
-        grade,
-        student_name=child["name"] if child else "",
-        child_id=child["id"] if child else None,
-    )
+    # Las guías oficiales son las 25 guías generales ya generadas. El niño
+    # se valida arriba, pero el PDF compartido conserva el diseño y el QR
+    # público de la materia y el grado solicitados.
+    guide = build_guide(subject, grade)
     return jsonify({
         "subject": guide.subject,
         "grade": guide.grade,
@@ -106,12 +104,9 @@ def pdf():
     child, child_error = _child_for_requested_guide(grade)
     if child_error:
         return child_error
-    guide = build_guide(
-        subject,
-        grade,
-        student_name=child["name"] if child else "",
-        child_id=child["id"] if child else None,
-    )
+    # Servimos la guía oficial general de la materia y grado. El perfil se
+    # valida arriba, pero no se genera un PDF alterno ni se usa el caché FPDF.
+    guide = build_guide(subject, grade)
     try:
         pdf_bytes, cache_hit = cached_pdf_for_guide(guide)
     except Exception:

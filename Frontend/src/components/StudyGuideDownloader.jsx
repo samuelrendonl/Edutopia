@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { fetchStudyGuidePdf } from "../api";
 
 const SUBJECTS = [
@@ -24,17 +24,36 @@ export default function StudyGuideDownloader({ child }) {
   const [active, setActive] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [preview, setPreview] = useState(null);
+  const previewUrlRef = useRef("");
   const grade = Number(child.grade);
+
+  useEffect(() => () => {
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+  }, []);
+
+  function closePreview() {
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    previewUrlRef.current = "";
+    setPreview(null);
+  }
 
   async function handleGuide(subject, mode) {
     if (mode === "preview") {
-      const params = new URLSearchParams({
-        subject: subject.slug,
-        grade: String(grade),
-        child_id: String(child.id),
-      });
-      const preview = window.open(`/study-guide?${params}`, "_blank");
-      if (!preview) window.open(`/study-guide?${params}`, "_self");
+      setActive(`${subject.slug}-${mode}`);
+      setError("");
+      setNotice(`Preparando la guía de ${subject.label} de ${grade}.º grado…`);
+      try {
+        const blob = await fetchStudyGuidePdf(subject.slug, grade, child.id, { download: false });
+        if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = URL.createObjectURL(blob);
+        setPreview({ subject: subject.label, url: previewUrlRef.current });
+      } catch (requestError) {
+        setError(requestError.message);
+      } finally {
+        setActive("");
+        setNotice("");
+      }
       return;
     }
     setActive(`${subject.slug}-${mode}`);
@@ -87,6 +106,20 @@ export default function StudyGuideDownloader({ child }) {
       </div>
       {error && <p className="study-guide-error">{error}</p>}
       {notice && <p className="study-guide-notice" role="status">{notice}</p>}
+      {preview && (
+        <div className="study-guide-preview-backdrop" role="presentation" onMouseDown={closePreview}>
+          <section className="study-guide-preview-modal" role="dialog" aria-modal="true" aria-label={`Vista previa de ${preview.subject}`} onMouseDown={(event) => event.stopPropagation()}>
+            <div className="study-guide-preview-header">
+              <div>
+                <span className="child-label">VISTA PREVIA</span>
+                <h3>{preview.subject} · {grade}.º grado</h3>
+              </div>
+              <button type="button" onClick={closePreview}>Cerrar</button>
+            </div>
+            <iframe title={`Vista previa de ${preview.subject}`} src={preview.url} />
+          </section>
+        </div>
+      )}
     </section>
   );
 }
