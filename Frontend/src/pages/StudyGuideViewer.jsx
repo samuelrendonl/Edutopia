@@ -26,7 +26,7 @@ export default function StudyGuideViewer() {
       return undefined;
     }
     let objectUrl = "";
-    fetchStudyGuidePdf(subject, grade, childId)
+    fetchStudyGuidePdf(subject, grade, childId, { download: false })
       .then((blob) => {
         objectUrl = URL.createObjectURL(blob);
         setPdfUrl(objectUrl);

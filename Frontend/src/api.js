@@ -16,10 +16,11 @@ export async function api(path, options = {}) {
   return data;
 }
 
-export async function fetchStudyGuidePdf(subject, grade, childId) {
+export async function fetchStudyGuidePdf(subject, grade, childId, { download = true } = {}) {
   const parent = getParent();
   const params = new URLSearchParams({ subject, grade: String(grade) });
   if (childId) params.set("child_id", String(childId));
+  if (!download) params.set("download", "0");
   const response = await fetch(`${API_URL}/study-guides/pdf?${params}`, {
     headers: parent?.token ? { "X-Auth-Token": parent.token } : {},
   });

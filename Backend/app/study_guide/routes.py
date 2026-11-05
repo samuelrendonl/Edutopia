@@ -115,7 +115,7 @@ def pdf():
     response = send_file(
         io.BytesIO(pdf_bytes),
         mimetype="application/pdf",
-        as_attachment=True,
+        as_attachment=request.args.get("download", "1") != "0",
         download_name=filename,
         max_age=15 * 24 * 60 * 60,
     )
